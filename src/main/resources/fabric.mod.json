@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "id": "autowalk",
+  "version": "${version}",
+  "name": "Autowalk",
+  "description": "A mod that makes you walk forward.",
+  "authors": [
+    "Ciocolata47"
+  ],
+  "contact": {
+    "repo": "https://github.com/Ciocolata47/Macro"
+  },
+  "license": "All-Rights-Reserved",
+  "environment": "client",
+  "entrypoints": {
+
+    "main": [
+      "me.cioco.autowalk.Main"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric": "*",
+    "minecraft": "${minecraft_version}"
+  }
+}
