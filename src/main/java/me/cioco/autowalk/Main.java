@@ -1,9 +1,10 @@
 package me.cioco.autowalk;
 
+import me.cioco.autowalk.commands.*;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.text.Text;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.util.Formatting;
@@ -12,14 +13,13 @@ import org.lwjgl.glfw.GLFW;
 public class Main implements ModInitializer {
     public static KeyBinding keyBinding;
     public static boolean toggled = false;
-    private boolean forwardKeyState = false;
 
     @Override
     public void onInitialize() {
         keyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-                "key.autowalk.toggle",
+                "key.auto-walk.toggle",
                 GLFW.GLFW_KEY_UNKNOWN,
-                "key.categories.autowalk"
+                "key.categories.auto-walk"
         ));
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
@@ -31,14 +31,15 @@ public class Main implements ModInitializer {
                     client.player.sendMessage(Text.literal("AutoWalk: " + statusMessage).formatted(statusColor), false);
                 }
             }
-
-            if (toggled && !forwardKeyState) {
-                MinecraftClient.getInstance().options.forwardKey.setPressed(true);
-                forwardKeyState = true;
-            } else if (!toggled && forwardKeyState) {
-                MinecraftClient.getInstance().options.forwardKey.setPressed(false);
-                forwardKeyState = false;
-            }
+        });
+        addCommands();
+    }
+    private void addCommands() {
+        ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> {
+            WalkBackwards.register(dispatcher);
+            WalkLeft.register(dispatcher);
+            WalkForward.register(dispatcher);
+            WalkRight.register(dispatcher);
         });
     }
 }

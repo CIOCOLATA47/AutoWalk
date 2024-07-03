@@ -8,9 +8,13 @@
     "Ciocolata47"
   ],
   "contact": {
-    "repo": "https://github.com/Ciocolata47/Macro"
+    "repo": "https://github.com/CIOCOLATA47/AutoWalk",
+    "issues": "https://github.com/CIOCOLATA47/AutoWalk/issues"
   },
   "license": "All-Rights-Reserved",
+  "mixins": [
+    "autowalk.mixins.json"
+  ],
   "environment": "client",
   "entrypoints": {
 
@@ -21,6 +25,6 @@
   "depends": {
     "fabricloader": ">=${loader_version}",
     "fabric": "*",
-    "minecraft": "${minecraft_version}"
+    "minecraft": ">=1.19"
   }
 }
