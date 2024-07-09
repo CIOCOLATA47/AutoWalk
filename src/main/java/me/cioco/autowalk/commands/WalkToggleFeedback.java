@@ -13,9 +13,7 @@ public class WalkToggleFeedback {
 
     public static void register(CommandDispatcher<FabricClientCommandSource> dispatcher) {
         dispatcher.register(ClientCommandManager.literal("autowalk")
-                .then(ClientCommandManager.literal("feedback")
-                        .then(ClientCommandManager.literal("toggle")
-                                .executes(WalkToggleFeedback::toggleFeedback))));
+                .then(ClientCommandManager.literal("feedback").executes(WalkToggleFeedback::toggleFeedback)));
     }
 
     private static int toggleFeedback(CommandContext<FabricClientCommandSource> context) {
