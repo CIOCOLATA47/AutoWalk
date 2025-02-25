@@ -19,6 +19,7 @@ public class WalkStatus {
         context.getSource().sendFeedback(getStatusText("Left", WalkLeft.walkleft));
         context.getSource().sendFeedback(getStatusText("Right", WalkRight.walkright));
         context.getSource().sendFeedback(getStatusText("Backwards", WalkBackwards.walkbackwards));
+        context.getSource().sendFeedback(getStatusText("StopOnDamage", StopOnDamage.stopondamage));
         context.getSource().sendFeedback(Text.literal("-----------------------"));
         return 1;
     }
