@@ -46,6 +46,8 @@ public class Main implements ModInitializer {
             WalkRight.register(dispatcher);
             WalkStatus.register(dispatcher);
             WalkToggleFeedback.register(dispatcher);
+            ToggleSprint.register(dispatcher);
+            RandomPause.register(dispatcher);
         });
     }
 }
