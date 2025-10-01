@@ -19,7 +19,7 @@ public class Main implements ModInitializer {
         keyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.auto-walk.toggle",
                 GLFW.GLFW_KEY_UNKNOWN,
-                "key.categories.auto-walk"
+                KeyBinding.Category.MISC
         ));
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
