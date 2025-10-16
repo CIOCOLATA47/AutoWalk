@@ -18,11 +18,11 @@ public class AutowalkMixin {
 
     private final Random random = new Random();
     private int randomPauseCounter = 0;
-
     private boolean modPressedForward = false;
     private boolean modPressedBack = false;
     private boolean modPressedLeft = false;
     private boolean modPressedRight = false;
+    private boolean modPressedSprint = false;
 
     @Inject(method = "tick", at = @At("HEAD"))
     private void onTick(CallbackInfo ci) {
@@ -34,17 +34,17 @@ public class AutowalkMixin {
         if (StopOnDamage.stopondamage && Main.toggled && player.hurtTime > 0) {
             releaseKeys(mc);
             Main.toggled = false;
-            mc.player.sendMessage(
-                    Text.literal("AutoWalk: The mod has been toggled off due to damage.").formatted(Formatting.RED),
-                    false
+            player.sendMessage(
+                    Text.literal("AutoWalk: The mod has been toggled off due to damage.")
+                            .formatted(Formatting.RED), false
             );
             return;
         }
 
         boolean isGUIOpen = mc.currentScreen != null;
         boolean isGUIClosed = mc.currentScreen == null;
-
         boolean pauseThisTick = false;
+
         if (Main.toggled && RandomPause.randomPauseEnabled && random.nextInt(200) == 0) {
             randomPauseCounter = 10 + random.nextInt(20);
         }
@@ -58,6 +58,8 @@ public class AutowalkMixin {
             modPressedBack = pressKey(mc.options.backKey, WalkBackwards.walkbackwards);
             modPressedLeft = pressKey(mc.options.leftKey, WalkLeft.walkleft);
             modPressedRight = pressKey(mc.options.rightKey, WalkRight.walkright);
+        } else if (!Main.toggled || pauseThisTick) {
+            releaseKeys(mc);
         }
 
         if (Main.toggled && isGUIOpen) {
@@ -67,18 +69,20 @@ public class AutowalkMixin {
             if (WalkRight.walkright) mc.options.rightKey.setPressed(true);
         }
 
-        if (Main.toggled && !pauseThisTick && ToggleSprint.sprinting) {
-            player.setSprinting(true);
+        if (Main.toggled && !pauseThisTick) {
+            if (ToggleSprint.sprinting && !player.isSwimming()) {
+                mc.options.sprintKey.setPressed(true);
+                modPressedSprint = true;
+            }
         } else {
-            player.setSprinting(false);
-        }
-
-        if (!Main.toggled || pauseThisTick) {
-            releaseKeys(mc);
+            if (modPressedSprint) {
+                mc.options.sprintKey.setPressed(false);
+                modPressedSprint = false;
+            }
         }
     }
 
-    private boolean pressKey(net.minecraft.client.option.KeyBinding key, boolean shouldPress) {
+        private boolean pressKey(net.minecraft.client.option.KeyBinding key, boolean shouldPress) {
         if (shouldPress) {
             key.setPressed(true);
             return true;
@@ -91,7 +95,6 @@ public class AutowalkMixin {
         if (modPressedBack) mc.options.backKey.setPressed(false);
         if (modPressedLeft) mc.options.leftKey.setPressed(false);
         if (modPressedRight) mc.options.rightKey.setPressed(false);
-
         modPressedForward = modPressedBack = modPressedLeft = modPressedRight = false;
     }
 }
