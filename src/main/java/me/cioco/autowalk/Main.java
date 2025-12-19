@@ -8,18 +8,21 @@ import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
+import net.minecraft.util.Identifier;
 import org.lwjgl.glfw.GLFW;
 
 public class Main implements ModInitializer {
     public static KeyBinding keyBinding;
     public static boolean toggled = false;
 
+    public static final KeyBinding.Category CATEGORY_AUTOWALK = KeyBinding.Category.create(Identifier.of("autowalk", "key_category"));
+
     @Override
     public void onInitialize() {
         keyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.auto-walk.toggle",
                 GLFW.GLFW_KEY_UNKNOWN,
-                KeyBinding.Category.MISC
+                CATEGORY_AUTOWALK
         ));
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {

@@ -7,7 +7,6 @@ import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
-
 public class WalkBackwards {
 
     public static boolean walkbackwards = false;
@@ -16,13 +15,16 @@ public class WalkBackwards {
         dispatcher.register(ClientCommandManager.literal("autowalk")
                 .then(ClientCommandManager.literal("backwards").executes(WalkBackwards::walkbackwards)));
     }
+
     private static int walkbackwards(CommandContext<FabricClientCommandSource> context) {
         walkbackwards = !walkbackwards;
 
-        String statusMessage = walkbackwards ? "Walking backwards Enabled" : "Walking backwards Disabled";
-        Formatting statusColor = walkbackwards ? Formatting.GREEN : Formatting.RED;
-        context.getSource().sendFeedback(Text.literal("AutoWalk: " + statusMessage).formatted(statusColor));
-        return 1;
+        if (WalkToggleFeedback.walkToggleFeedback) {
+            String statusMessage = walkbackwards ? "Walking backwards Enabled" : "Walking backwards Disabled";
+            Formatting statusColor = walkbackwards ? Formatting.GREEN : Formatting.RED;
+            context.getSource().sendFeedback(Text.literal("AutoWalk: " + statusMessage).formatted(statusColor));
+        }
 
+        return 1;
     }
 }

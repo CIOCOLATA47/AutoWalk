@@ -19,10 +19,12 @@ public class RandomPause {
     private static int toggleRandomPause(CommandContext<FabricClientCommandSource> context) {
         randomPauseEnabled = !randomPauseEnabled;
 
-        String statusMessage = randomPauseEnabled ? "Random Pause Enabled" : "Random Pause Disabled";
-        Formatting statusColor = randomPauseEnabled ? Formatting.GREEN : Formatting.RED;
+        if (WalkToggleFeedback.walkToggleFeedback) {
+            String statusMessage = randomPauseEnabled ? "Random Pause Enabled" : "Random Pause Disabled";
+            Formatting statusColor = randomPauseEnabled ? Formatting.GREEN : Formatting.RED;
+            context.getSource().sendFeedback(Text.literal("AutoWalk: " + statusMessage).formatted(statusColor));
+        }
 
-        context.getSource().sendFeedback(Text.literal("AutoWalk: " + statusMessage).formatted(statusColor));
         return 1;
     }
 }

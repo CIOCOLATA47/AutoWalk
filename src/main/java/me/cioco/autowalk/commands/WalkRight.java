@@ -7,7 +7,6 @@ import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
-
 public class WalkRight {
 
     public static boolean walkright = false;
@@ -16,13 +15,16 @@ public class WalkRight {
         dispatcher.register(ClientCommandManager.literal("autowalk")
                 .then(ClientCommandManager.literal("right").executes(WalkRight::walkright)));
     }
+
     private static int walkright(CommandContext<FabricClientCommandSource> context) {
         walkright = !walkright;
 
-        String statusMessage = walkright ? "Walking walkright Enabled" : "Walking walkright Disabled";
-        Formatting statusColor = walkright ? Formatting.GREEN : Formatting.RED;
-        context.getSource().sendFeedback(Text.literal("AutoWalk: " + statusMessage).formatted(statusColor));
-        return 1;
+        if (WalkToggleFeedback.walkToggleFeedback) {
+            String statusMessage = walkright ? "Walking walkright Enabled" : "Walking walkright Disabled";
+            Formatting statusColor = walkright ? Formatting.GREEN : Formatting.RED;
+            context.getSource().sendFeedback(Text.literal("AutoWalk: " + statusMessage).formatted(statusColor));
+        }
 
+        return 1;
     }
 }

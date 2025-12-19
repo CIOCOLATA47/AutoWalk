@@ -20,15 +20,17 @@ public class ToggleSprint {
     private static int toggleSprint(CommandContext<FabricClientCommandSource> context) {
         sprinting = !sprinting;
 
-        // Update player sprint state immediately
         MinecraftClient mc = MinecraftClient.getInstance();
         if (mc.player != null) {
             mc.player.setSprinting(sprinting);
         }
 
-        String statusMessage = sprinting ? "Sprint Enabled" : "Sprint Disabled";
-        Formatting statusColor = sprinting ? Formatting.GREEN : Formatting.RED;
-        context.getSource().sendFeedback(Text.literal("AutoWalk: " + statusMessage).formatted(statusColor));
+        if (WalkToggleFeedback.walkToggleFeedback) {
+            String statusMessage = sprinting ? "Sprint Enabled" : "Sprint Disabled";
+            Formatting statusColor = sprinting ? Formatting.GREEN : Formatting.RED;
+            context.getSource().sendFeedback(Text.literal("AutoWalk: " + statusMessage).formatted(statusColor));
+        }
+
         return 1;
     }
 }

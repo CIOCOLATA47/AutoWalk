@@ -19,9 +19,12 @@ public class StopOnDamage {
     private static int toggleStopOnDamage(CommandContext<FabricClientCommandSource> context) {
         stopondamage = !stopondamage;
 
-        String statusMessage = stopondamage ? "Stop on damage Enabled" : "Stop on damage Disabled";
-        Formatting statusColor = stopondamage ? Formatting.GREEN : Formatting.RED;
-        context.getSource().sendFeedback(Text.literal("AutoWalk: " + statusMessage).formatted(statusColor));
+        if (WalkToggleFeedback.walkToggleFeedback) {
+            String statusMessage = stopondamage ? "Stop on damage Enabled" : "Stop on damage Disabled";
+            Formatting statusColor = stopondamage ? Formatting.GREEN : Formatting.RED;
+            context.getSource().sendFeedback(Text.literal("AutoWalk: " + statusMessage).formatted(statusColor));
+        }
+
         return 1;
     }
 }

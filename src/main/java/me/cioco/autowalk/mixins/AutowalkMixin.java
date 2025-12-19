@@ -32,7 +32,7 @@ public class AutowalkMixin {
         PlayerEntity player = mc.player;
 
         if (StopOnDamage.stopondamage && Main.toggled && player.hurtTime > 0) {
-            releaseKeys(mc);
+            releaseAllKeys(mc);
             Main.toggled = false;
             player.sendMessage(
                     Text.literal("AutoWalk: The mod has been toggled off due to damage.")
@@ -41,11 +41,13 @@ public class AutowalkMixin {
             return;
         }
 
-        boolean isGUIOpen = mc.currentScreen != null;
-        boolean isGUIClosed = mc.currentScreen == null;
-        boolean pauseThisTick = false;
+        if (!Main.toggled) {
+            releaseAllKeys(mc);
+            return;
+        }
 
-        if (Main.toggled && RandomPause.randomPauseEnabled && random.nextInt(200) == 0) {
+        boolean pauseThisTick = false;
+        if (RandomPause.randomPauseEnabled && random.nextInt(200) == 0) {
             randomPauseCounter = 10 + random.nextInt(20);
         }
         if (randomPauseCounter > 0) {
@@ -53,48 +55,55 @@ public class AutowalkMixin {
             pauseThisTick = true;
         }
 
-        if (Main.toggled && !pauseThisTick && isGUIClosed) {
-            modPressedForward = pressKey(mc.options.forwardKey, WalkForward.walkforward);
-            modPressedBack = pressKey(mc.options.backKey, WalkBackwards.walkbackwards);
-            modPressedLeft = pressKey(mc.options.leftKey, WalkLeft.walkleft);
-            modPressedRight = pressKey(mc.options.rightKey, WalkRight.walkright);
-        } else if (!Main.toggled || pauseThisTick) {
-            releaseKeys(mc);
-        }
-
-        if (Main.toggled && isGUIOpen) {
-            if (WalkForward.walkforward) mc.options.forwardKey.setPressed(true);
-            if (WalkBackwards.walkbackwards) mc.options.backKey.setPressed(true);
-            if (WalkLeft.walkleft) mc.options.leftKey.setPressed(true);
-            if (WalkRight.walkright) mc.options.rightKey.setPressed(true);
-        }
-
-        if (Main.toggled && !pauseThisTick) {
-            if (ToggleSprint.sprinting && !player.isSwimming()) {
-                mc.options.sprintKey.setPressed(true);
-                modPressedSprint = true;
-            }
+        if (pauseThisTick) {
+            releaseAllKeys(mc);
         } else {
-            if (modPressedSprint) {
-                mc.options.sprintKey.setPressed(false);
-                modPressedSprint = false;
+            boolean isGUIOpen = mc.currentScreen != null;
+
+            boolean forward = WalkForward.walkforward;
+            boolean back = WalkBackwards.walkbackwards;
+            boolean left = WalkLeft.walkleft;
+            boolean right = WalkRight.walkright;
+
+            if (isGUIOpen) {
+                mc.options.forwardKey.setPressed(forward);
+                mc.options.backKey.setPressed(back);
+                mc.options.leftKey.setPressed(left);
+                mc.options.rightKey.setPressed(right);
+
+                modPressedForward = forward;
+                modPressedBack = back;
+                modPressedLeft = left;
+                modPressedRight = right;
+            } else {
+                modPressedForward = pressKey(mc.options.forwardKey, forward);
+                modPressedBack = pressKey(mc.options.backKey, back);
+                modPressedLeft = pressKey(mc.options.leftKey, left);
+                modPressedRight = pressKey(mc.options.rightKey, right);
             }
         }
-    }
 
-        private boolean pressKey(net.minecraft.client.option.KeyBinding key, boolean shouldPress) {
-        if (shouldPress) {
-            key.setPressed(true);
-            return true;
+        if (!pauseThisTick && ToggleSprint.sprinting && !player.isSwimming()) {
+            mc.options.sprintKey.setPressed(true);
+            modPressedSprint = true;
+        } else if (modPressedSprint) {
+            mc.options.sprintKey.setPressed(false);
+            modPressedSprint = false;
         }
-        return false;
     }
 
-    private void releaseKeys(MinecraftClient mc) {
+    private boolean pressKey(net.minecraft.client.option.KeyBinding key, boolean shouldPress) {
+        key.setPressed(shouldPress);
+        return shouldPress;
+    }
+
+    private void releaseAllKeys(MinecraftClient mc) {
         if (modPressedForward) mc.options.forwardKey.setPressed(false);
         if (modPressedBack) mc.options.backKey.setPressed(false);
         if (modPressedLeft) mc.options.leftKey.setPressed(false);
         if (modPressedRight) mc.options.rightKey.setPressed(false);
-        modPressedForward = modPressedBack = modPressedLeft = modPressedRight = false;
+        if (modPressedSprint) mc.options.sprintKey.setPressed(false);
+
+        modPressedForward = modPressedBack = modPressedLeft = modPressedRight = modPressedSprint = false;
     }
 }
