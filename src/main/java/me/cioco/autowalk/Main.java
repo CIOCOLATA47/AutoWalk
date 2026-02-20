@@ -1,8 +1,8 @@
 package me.cioco.autowalk;
 
-import me.cioco.autowalk.commands.*;
+import me.cioco.autowalk.config.AutoWalkConfig;
+import me.cioco.autowalk.gui.AutoWalkScreen;
 import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.minecraft.client.option.KeyBinding;
@@ -12,45 +12,47 @@ import net.minecraft.util.Identifier;
 import org.lwjgl.glfw.GLFW;
 
 public class Main implements ModInitializer {
-    public static KeyBinding keyBinding;
-    public static boolean toggled = false;
-
     public static final KeyBinding.Category CATEGORY_AUTOWALK = KeyBinding.Category.create(Identifier.of("autowalk", "key_category"));
+    public static KeyBinding toggleKey;
+    public static KeyBinding guiKey;
 
     @Override
     public void onInitialize() {
-        keyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+
+        AutoWalkConfig.getInstance().loadOrSave();
+
+        toggleKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.auto-walk.toggle",
                 GLFW.GLFW_KEY_UNKNOWN,
                 CATEGORY_AUTOWALK
         ));
 
-        ClientTickEvents.END_CLIENT_TICK.register(client -> {
-            while (keyBinding.wasPressed()) {
-                toggled = !toggled;
+        guiKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+                "key.auto-walk.open_gui",
+                GLFW.GLFW_KEY_UNKNOWN,
+                CATEGORY_AUTOWALK
+        ));
 
-                if(WalkToggleFeedback.walkToggleFeedback) {
-                    String statusMessage = toggled ? "Enabled" : "Disabled";
-                    Formatting statusColor = toggled ? Formatting.GREEN : Formatting.RED;
-                    if (client.player != null) {
-                        client.player.sendMessage(Text.literal("AutoWalk: " + statusMessage).formatted(statusColor), false);
-                    }
-                }
+        ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            if (client.player == null) return;
+
+            while (toggleKey.wasPressed()) {
+                AutoWalkConfig config = AutoWalkConfig.getInstance();
+                config.enabled = !config.enabled;
+                config.save();
+
+                String status = config.enabled ? "Enabled" : "Disabled";
+                Formatting color = config.enabled ? Formatting.GREEN : Formatting.RED;
+
+                client.player.sendMessage(
+                        Text.literal("AutoWalk: " + status).formatted(color),
+                        true
+                );
             }
-        });
-        addCommands();
-    }
-    private void addCommands() {
-        ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> {
-            WalkBackwards.register(dispatcher);
-            WalkLeft.register(dispatcher);
-            WalkForward.register(dispatcher);
-            StopOnDamage.register(dispatcher);
-            WalkRight.register(dispatcher);
-            WalkStatus.register(dispatcher);
-            WalkToggleFeedback.register(dispatcher);
-            ToggleSprint.register(dispatcher);
-            RandomPause.register(dispatcher);
+
+            while (guiKey.wasPressed()) {
+                client.setScreen(new AutoWalkScreen(client.currentScreen));
+            }
         });
     }
 }

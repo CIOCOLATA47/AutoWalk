@@ -12,6 +12,7 @@
     "issues": "https://github.com/CIOCOLATA47/AutoWalk/issues"
   },
   "license": "All-Rights-Reserved",
+  "icon": "icon.png",
   "mixins": [
     "autowalk.mixins.json"
   ],
