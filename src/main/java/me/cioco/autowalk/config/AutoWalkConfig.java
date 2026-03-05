@@ -17,16 +17,25 @@ public class AutoWalkConfig {
     private static final String CONFIG_FILE = "autowalk-config.properties";
 
     private static final AutoWalkConfig INSTANCE = new AutoWalkConfig();
-    public boolean enabled = false;
-    public boolean stopOnDamage = true;
+
+    public boolean enabled            = false;
+    public boolean stopOnDamage       = true;
     public boolean randomPauseEnabled = false;
-    public boolean sprinting = false;
-    public boolean walkForward = false;
-    public boolean walkBackwards = false;
-    public boolean walkLeft = false;
-    public boolean walkRight = false;
-    public boolean autoEat = false;
-    public float eatHungerThreshold = 10.0f;
+    public boolean sprinting          = false;
+    public boolean walkForward        = false;
+    public boolean walkBackwards      = false;
+    public boolean walkLeft           = false;
+    public boolean walkRight          = false;
+
+    public boolean autoEat            = false;
+    public float   eatHungerThreshold = 10.0f;
+
+    public boolean autoJump           = false;
+    public boolean avoidDrops         = false;
+    public int     jumpDropThreshold  = 3;
+    public boolean avoidLava          = false;
+
+    public boolean waterSurface       = false;
 
     public static AutoWalkConfig getInstance() {
         return INSTANCE;
@@ -43,17 +52,21 @@ public class AutoWalkConfig {
 
     public void save() {
         Properties props = new Properties();
-        props.setProperty("enabled", String.valueOf(enabled));
-        props.setProperty("stopOnDamage", String.valueOf(stopOnDamage));
+        props.setProperty("enabled",            String.valueOf(enabled));
+        props.setProperty("stopOnDamage",       String.valueOf(stopOnDamage));
         props.setProperty("randomPauseEnabled", String.valueOf(randomPauseEnabled));
-        props.setProperty("sprinting", String.valueOf(sprinting));
-        props.setProperty("walkForward", String.valueOf(walkForward));
-        props.setProperty("walkBackwards", String.valueOf(walkBackwards));
-        props.setProperty("walkLeft", String.valueOf(walkLeft));
-        props.setProperty("walkRight", String.valueOf(walkRight));
-
-        props.setProperty("autoEat", String.valueOf(autoEat));
+        props.setProperty("sprinting",          String.valueOf(sprinting));
+        props.setProperty("walkForward",        String.valueOf(walkForward));
+        props.setProperty("walkBackwards",      String.valueOf(walkBackwards));
+        props.setProperty("walkLeft",           String.valueOf(walkLeft));
+        props.setProperty("walkRight",          String.valueOf(walkRight));
+        props.setProperty("autoEat",            String.valueOf(autoEat));
         props.setProperty("eatHungerThreshold", String.valueOf(eatHungerThreshold));
+        props.setProperty("autoJump",           String.valueOf(autoJump));
+        props.setProperty("avoidDrops",         String.valueOf(avoidDrops));
+        props.setProperty("jumpDropThreshold",  String.valueOf(jumpDropThreshold));
+        props.setProperty("avoidLava",          String.valueOf(avoidLava));
+        props.setProperty("waterSurface",       String.valueOf(waterSurface));
 
         try {
             Path configPath = getConfigPath();
@@ -72,18 +85,21 @@ public class AutoWalkConfig {
 
         try (InputStream input = Files.newInputStream(configPath)) {
             props.load(input);
-            this.enabled = getBool(props, "enabled", false);
-            this.stopOnDamage = getBool(props, "stopOnDamage", true);
-            this.randomPauseEnabled = getBool(props, "randomPauseEnabled", false);
-            this.sprinting = getBool(props, "sprinting", false);
-            this.walkForward = getBool(props, "walkForward", false);
-            this.walkBackwards = getBool(props, "walkBackwards", false);
-            this.walkLeft = getBool(props, "walkLeft", false);
-            this.walkRight = getBool(props, "walkRight", false);
-
-            this.autoEat = getBool(props, "autoEat", false);
+            this.enabled            = getBool (props, "enabled",            false);
+            this.stopOnDamage       = getBool (props, "stopOnDamage",       true);
+            this.randomPauseEnabled = getBool (props, "randomPauseEnabled", false);
+            this.sprinting          = getBool (props, "sprinting",          false);
+            this.walkForward        = getBool (props, "walkForward",        false);
+            this.walkBackwards      = getBool (props, "walkBackwards",      false);
+            this.walkLeft           = getBool (props, "walkLeft",           false);
+            this.walkRight          = getBool (props, "walkRight",          false);
+            this.autoEat            = getBool (props, "autoEat",            false);
             this.eatHungerThreshold = getFloat(props, "eatHungerThreshold", 10.0f);
-
+            this.autoJump           = getBool (props, "autoJump",           false);
+            this.avoidDrops         = getBool (props, "avoidDrops",         false);
+            this.jumpDropThreshold  = getInt  (props, "jumpDropThreshold",  3);
+            this.avoidLava          = getBool (props, "avoidLava",          false);
+            this.waterSurface       = getBool (props, "waterSurface",       false);
         } catch (IOException e) {
             LOGGER.error("Failed to load AutoWalk config", e);
         }
@@ -96,6 +112,14 @@ public class AutoWalkConfig {
     private float getFloat(Properties props, String key, float def) {
         try {
             return Float.parseFloat(props.getProperty(key, String.valueOf(def)));
+        } catch (NumberFormatException e) {
+            return def;
+        }
+    }
+
+    private int getInt(Properties props, String key, int def) {
+        try {
+            return Integer.parseInt(props.getProperty(key, String.valueOf(def)));
         } catch (NumberFormatException e) {
             return def;
         }

@@ -16,14 +16,14 @@ import java.util.function.Consumer;
 
 public class AutoWalkScreen extends Screen {
 
-    private static final int SPACING_Y = 24;
+    private static final int SPACING_Y      = 24;
     private static final int SECTION_MARGIN = 35;
-    private static final int TITLE_HEIGHT = 20;
+    private static final int TITLE_HEIGHT   = 20;
 
     private final Screen parent;
     private final List<ClickableWidget> scrollableWidgets = new ArrayList<>();
     private final int ACCENT_COLOR = 0xFF00FBFF;
-    private final int PANEL_BG = 0x90001520;
+    private final int PANEL_BG     = 0x90001520;
     private int scrollOffset = 0;
     private int maxScroll;
     private int contentHeight;
@@ -41,29 +41,38 @@ public class AutoWalkScreen extends Screen {
         this.scrollableWidgets.clear();
 
         AutoWalkConfig config = AutoWalkConfig.getInstance();
-        int centerX = width / 2;
-        int leftCol = centerX - 155;
+        int centerX  = width / 2;
+        int leftCol  = centerX - 155;
         int rightCol = centerX + 5;
-        int startY = 70;
-        int currentY = startY;
+        int currentY = 70;
 
-        addToggleButton(leftCol, currentY, "Forward", "Walks forward continuously", config.walkForward, v -> config.walkForward = v);
+        addToggleButton(leftCol,  currentY, "Forward",  "Walks forward continuously",  config.walkForward,   v -> config.walkForward   = v);
         addToggleButton(rightCol, currentY, "Backward", "Walks backward continuously", config.walkBackwards, v -> config.walkBackwards = v);
         currentY += SPACING_Y;
-        addToggleButton(leftCol, currentY, "Left", "Strafes left", config.walkLeft, v -> config.walkLeft = v);
+        addToggleButton(leftCol,  currentY, "Left",  "Strafes left",  config.walkLeft,  v -> config.walkLeft  = v);
         addToggleButton(rightCol, currentY, "Right", "Strafes right", config.walkRight, v -> config.walkRight = v);
 
         currentY += SPACING_Y + SECTION_MARGIN;
 
-        addToggleButton(leftCol, currentY, "Auto Sprint", "Forces sprinting while walking", config.sprinting, v -> config.sprinting = v);
-        addToggleButton(rightCol, currentY, "Stop On Damage", "Disables mod if you get hit", config.stopOnDamage, v -> config.stopOnDamage = v);
+        addToggleButton(leftCol,  currentY, "Auto Sprint",    "Forces sprinting while walking",  config.sprinting,          v -> config.sprinting          = v);
+        addToggleButton(rightCol, currentY, "Stop On Damage", "Disables mod if you get hit",     config.stopOnDamage,       v -> config.stopOnDamage       = v);
         currentY += SPACING_Y;
-        addToggleButton(leftCol, currentY, "Random Pause", "Will randomly stop for a bit", config.randomPauseEnabled, v -> config.randomPauseEnabled = v);
+        addToggleButton(leftCol,  currentY, "Random Pause",   "Will randomly stop for a bit",    config.randomPauseEnabled, v -> config.randomPauseEnabled = v);
 
         currentY += SPACING_Y + SECTION_MARGIN;
 
-        addToggleButton(leftCol, currentY, "Auto Eat", "Automatically eats when hungry", config.autoEat, v -> config.autoEat = v);
+        addToggleButton(leftCol,  currentY, "Auto Eat", "Automatically eats when hungry", config.autoEat, v -> config.autoEat = v);
         addSlider(rightCol, currentY, 150, "Eat Threshold", config.eatHungerThreshold, 1.0f, 20.0f, v -> config.eatHungerThreshold = v);
+
+        currentY += SPACING_Y + SECTION_MARGIN;
+
+        addToggleButton(leftCol,  currentY, "Auto Jump",   "Jumps over 1-block obstacles",        config.autoJump,    v -> config.autoJump    = v);
+        addToggleButton(rightCol, currentY, "Water Float", "Stay afloat in water",                config.waterSurface, v -> config.waterSurface = v);
+        currentY += SPACING_Y;
+        addToggleButton(leftCol,  currentY, "Avoid Lava",  "Stops if lava is detected ahead",     config.avoidLava,   v -> config.avoidLava   = v);
+        addToggleButton(rightCol, currentY, "Avoid Drops", "Stops before big drops",              config.avoidDrops,  v -> config.avoidDrops  = v);
+        currentY += SPACING_Y;
+        addIntSlider(leftCol, currentY, 150, "Drop Threshold", config.jumpDropThreshold, 1, 30, v -> config.jumpDropThreshold = v);
 
         contentHeight = currentY + 40;
         maxScroll = Math.max(0, contentHeight - (height - 90));
@@ -93,7 +102,7 @@ public class AutoWalkScreen extends Screen {
     public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
         renderInGameBackground(ctx);
 
-        int cx = width / 2;
+        int cx     = width / 2;
         int panelW = 325;
         int panelX = cx - (panelW / 2);
 
@@ -109,6 +118,8 @@ public class AutoWalkScreen extends Screen {
         renderSectionGroup(ctx, panelX, currentY, panelW, 2, "Utility");
         currentY += (SPACING_Y * 2) + SECTION_MARGIN;
         renderSectionGroup(ctx, panelX, currentY, panelW, 1, "Helpers");
+        currentY += (SPACING_Y * 1) + SECTION_MARGIN;
+        renderSectionGroup(ctx, panelX, currentY, panelW, 3, "Auto Jump & Hazards");
 
         for (ClickableWidget widget : scrollableWidgets) {
             widget.visible = (widget.getY() + widget.getHeight() > 40 && widget.getY() < height - 70);
@@ -138,11 +149,11 @@ public class AutoWalkScreen extends Screen {
 
     private void drawScrollBar(DrawContext ctx) {
         if (maxScroll <= 0) return;
-        int trackX = width - 6;
-        int trackY = 40;
+        int trackX      = width - 6;
+        int trackY      = 40;
         int trackHeight = height - 110;
         int thumbHeight = Math.max(20, (int) ((float) trackHeight * (trackHeight / (float) contentHeight)));
-        int thumbY = trackY + (int) ((trackHeight - thumbHeight) * ((float) scrollOffset / maxScroll));
+        int thumbY      = trackY + (int) ((trackHeight - thumbHeight) * ((float) scrollOffset / maxScroll));
         ctx.fill(trackX, trackY, width - 2, trackY + trackHeight, 0x40000000);
         ctx.fill(trackX, thumbY, width - 2, thumbY + thumbHeight, ACCENT_COLOR);
     }
@@ -163,15 +174,23 @@ public class AutoWalkScreen extends Screen {
         addDrawableChild(slider);
     }
 
+    private void addIntSlider(int x, int y, int w, String label, int cur, int min, int max, Consumer<Integer> action) {
+        IntSlider slider = new IntSlider(x, y, w, 20, label, cur, min, max, action);
+        scrollableWidgets.add(slider);
+        addDrawableChild(slider);
+    }
+
     private Text getToggleText(String label, boolean value) {
-        return Text.literal(label + ": ").append(value ? Text.literal("ON").formatted(Formatting.GREEN) : Text.literal("OFF").formatted(Formatting.RED));
+        return Text.literal(label + ": ").append(
+                value ? Text.literal("ON").formatted(Formatting.GREEN)
+                        : Text.literal("OFF").formatted(Formatting.RED));
     }
 
     private Text getGlobalToggleText() {
         return Text.literal("AutoWalk: ").append(
-                AutoWalkConfig.getInstance().enabled ? Text.literal("Enabled").formatted(Formatting.GREEN)
-                        : Text.literal("Disabled").formatted(Formatting.RED)
-        );
+                AutoWalkConfig.getInstance().enabled
+                        ? Text.literal("Enabled").formatted(Formatting.GREEN)
+                        : Text.literal("Disabled").formatted(Formatting.RED));
     }
 
     @Override
@@ -187,9 +206,9 @@ public class AutoWalkScreen extends Screen {
 
         public GenericSlider(int x, int y, int w, int h, String label, float cur, float min, float max, Consumer<Float> action) {
             super(x, y, w, h, Text.empty(), (double) (cur - min) / (max - min));
-            this.label = label;
-            this.min = min;
-            this.max = max;
+            this.label        = label;
+            this.min          = min;
+            this.max          = max;
             this.updateAction = action;
             updateMessage();
         }
@@ -203,6 +222,33 @@ public class AutoWalkScreen extends Screen {
         @Override
         protected void applyValue() {
             float val = min + (float) (this.value * (max - min));
+            updateAction.accept(val);
+        }
+    }
+
+    private static class IntSlider extends SliderWidget {
+        private final String label;
+        private final int min, max;
+        private final Consumer<Integer> updateAction;
+
+        public IntSlider(int x, int y, int w, int h, String label, int cur, int min, int max, Consumer<Integer> action) {
+            super(x, y, w, h, Text.empty(), (double) (cur - min) / (max - min));
+            this.label        = label;
+            this.min          = min;
+            this.max          = max;
+            this.updateAction = action;
+            updateMessage();
+        }
+
+        @Override
+        protected void updateMessage() {
+            int val = min + (int) Math.round(this.value * (max - min));
+            this.setMessage(Text.literal(label + ": §b" + val));
+        }
+
+        @Override
+        protected void applyValue() {
+            int val = min + (int) Math.round(this.value * (max - min));
             updateAction.accept(val);
         }
     }
