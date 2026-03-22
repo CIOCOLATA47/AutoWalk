@@ -46,18 +46,32 @@ public class AutoWalkScreen extends Screen {
         int rightCol = centerX + 5;
         int currentY = 70;
 
-        addToggleButton(leftCol,  currentY, "Forward",  "Walks forward continuously",  config.walkForward,   v -> config.walkForward   = v);
-        addToggleButton(rightCol, currentY, "Backward", "Walks backward continuously", config.walkBackwards, v -> config.walkBackwards = v);
+        addToggleButton(leftCol,  currentY, "Forward",  "Walks forward continuously",  config.moveForward, v -> config.moveForward = v);
+        addToggleButton(rightCol, currentY, "Backward", "Walks backward continuously", config.moveBack,    v -> config.moveBack    = v);
         currentY += SPACING_Y;
-        addToggleButton(leftCol,  currentY, "Left",  "Strafes left",  config.walkLeft,  v -> config.walkLeft  = v);
-        addToggleButton(rightCol, currentY, "Right", "Strafes right", config.walkRight, v -> config.walkRight = v);
+        addToggleButton(leftCol,  currentY, "Left",  "Strafes left",  config.moveLeft,  v -> config.moveLeft  = v);
+        addToggleButton(rightCol, currentY, "Right", "Strafes right", config.moveRight, v -> config.moveRight = v);
+
+        currentY += SPACING_Y + SECTION_MARGIN;
+
+        addCycleButton(leftCol, currentY, 310, "Mode",
+                new String[]{"MANUAL", "RANDOM", "CIRCLE"},
+                config.movementMode.name(),
+                v -> config.movementMode = AutoWalkConfig.MovementMode.valueOf(v),
+                "MANUAL = use direction toggles above.\nRANDOM = randomly change direction.\nCIRCLE = rotate direction over time.");
 
         currentY += SPACING_Y + SECTION_MARGIN;
 
         addToggleButton(leftCol,  currentY, "Auto Sprint",    "Forces sprinting while walking",  config.sprinting,          v -> config.sprinting          = v);
-        addToggleButton(rightCol, currentY, "Stop On Damage", "Disables mod if you get hit",     config.stopOnDamage,       v -> config.stopOnDamage       = v);
-        currentY += SPACING_Y;
-        addToggleButton(leftCol,  currentY, "Random Pause",   "Will randomly stop for a bit",    config.randomPauseEnabled, v -> config.randomPauseEnabled = v);
+        addToggleButton(rightCol, currentY, "Random Pause",   "Will randomly stop for a bit",    config.randomPauseEnabled, v -> config.randomPauseEnabled = v);
+
+        currentY += SPACING_Y + SECTION_MARGIN;
+
+        addCycleButton(leftCol, currentY, 310, "On Damage",
+                new String[]{"STOP", "TURN_BACK", "RANDOM_TURN", "JUMP", "IGNORE"},
+                config.damageResponse.name(),
+                v -> config.damageResponse = AutoWalkConfig.DamageResponse.valueOf(v),
+                "What to do when you take damage:\nSTOP = disable AutoWalk\nTURN_BACK = reverse direction\nRANDOM_TURN = random direction\nJUMP = jump\nIGNORE = keep walking");
 
         currentY += SPACING_Y + SECTION_MARGIN;
 
@@ -66,13 +80,27 @@ public class AutoWalkScreen extends Screen {
 
         currentY += SPACING_Y + SECTION_MARGIN;
 
-        addToggleButton(leftCol,  currentY, "Auto Jump",   "Jumps over 1-block obstacles",        config.autoJump,    v -> config.autoJump    = v);
-        addToggleButton(rightCol, currentY, "Water Float", "Stay afloat in water",                config.waterSurface, v -> config.waterSurface = v);
+        addToggleButton(leftCol,  currentY, "Auto Jump",   "Jumps over 1-block obstacles", config.autoJump,     v -> config.autoJump     = v);
+        addToggleButton(rightCol, currentY, "Water Float", "Stay afloat in water",         config.waterSurface, v -> config.waterSurface = v);
         currentY += SPACING_Y;
-        addToggleButton(leftCol,  currentY, "Avoid Lava",  "Stops if lava is detected ahead",     config.avoidLava,   v -> config.avoidLava   = v);
-        addToggleButton(rightCol, currentY, "Avoid Drops", "Stops before big drops",              config.avoidDrops,  v -> config.avoidDrops  = v);
+        addToggleButton(leftCol,  currentY, "Avoid Drops", "Stops before big drops", config.avoidDrops, v -> config.avoidDrops = v);
+        addIntSlider(rightCol, currentY, 150, "Drop Threshold", config.jumpDropThreshold, 1, 30, v -> config.jumpDropThreshold = v);
+
+        currentY += SPACING_Y + SECTION_MARGIN;
+
+        addToggleButton(leftCol,  currentY, "Avoid Lava",       "Stops if lava is ahead",        config.avoidLava,      v -> config.avoidLava      = v);
+        addToggleButton(rightCol, currentY, "Avoid Fire",        "Stops if fire is ahead",       config.avoidFire,      v -> config.avoidFire      = v);
         currentY += SPACING_Y;
-        addIntSlider(leftCol, currentY, 150, "Drop Threshold", config.jumpDropThreshold, 1, 30, v -> config.jumpDropThreshold = v);
+        addToggleButton(leftCol,  currentY, "Avoid Cactus",     "Stops if cactus is ahead",      config.avoidCactus,    v -> config.avoidCactus    = v);
+        addToggleButton(rightCol, currentY, "Avoid Berry Bush", "Stops if berry bush is ahead",  config.avoidBerryBush, v -> config.avoidBerryBush = v);
+
+        currentY += SPACING_Y + SECTION_MARGIN;
+
+        addToggleButton(leftCol,  currentY, "Avoid Mobs",    "Stops near hostile mobs",   config.avoidHostileMobs, v -> config.avoidHostileMobs = v);
+        addSlider(rightCol, currentY, 150, "Mob Distance", config.hostileAvoidDistance, 1.0f, 20.0f, v -> config.hostileAvoidDistance = v);
+        currentY += SPACING_Y;
+        addToggleButton(leftCol,  currentY, "Avoid Players", "Stops near other players", config.avoidPlayers,     v -> config.avoidPlayers     = v);
+        addSlider(rightCol, currentY, 150, "Player Distance", config.playerAvoidDistance, 1.0f, 20.0f, v -> config.playerAvoidDistance = v);
 
         contentHeight = currentY + 40;
         maxScroll = Math.max(0, contentHeight - (height - 90));
@@ -115,11 +143,19 @@ public class AutoWalkScreen extends Screen {
         int currentY = 70 - scrollOffset;
         renderSectionGroup(ctx, panelX, currentY, panelW, 2, "Directional Movement");
         currentY += (SPACING_Y * 2) + SECTION_MARGIN;
-        renderSectionGroup(ctx, panelX, currentY, panelW, 2, "Utility");
-        currentY += (SPACING_Y * 2) + SECTION_MARGIN;
-        renderSectionGroup(ctx, panelX, currentY, panelW, 1, "Helpers");
+        renderSectionGroup(ctx, panelX, currentY, panelW, 1, "Movement Mode");
         currentY += (SPACING_Y * 1) + SECTION_MARGIN;
-        renderSectionGroup(ctx, panelX, currentY, panelW, 3, "Auto Jump & Hazards");
+        renderSectionGroup(ctx, panelX, currentY, panelW, 1, "Utility");
+        currentY += (SPACING_Y * 1) + SECTION_MARGIN;
+        renderSectionGroup(ctx, panelX, currentY, panelW, 1, "Damage Response");
+        currentY += (SPACING_Y * 1) + SECTION_MARGIN;
+        renderSectionGroup(ctx, panelX, currentY, panelW, 1, "Auto Eat");
+        currentY += (SPACING_Y * 1) + SECTION_MARGIN;
+        renderSectionGroup(ctx, panelX, currentY, panelW, 2, "Auto Jump & Drops");
+        currentY += (SPACING_Y * 2) + SECTION_MARGIN;
+        renderSectionGroup(ctx, panelX, currentY, panelW, 2, "Hazard Avoidance");
+        currentY += (SPACING_Y * 2) + SECTION_MARGIN;
+        renderSectionGroup(ctx, panelX, currentY, panelW, 2, "Entity Avoidance");
 
         for (ClickableWidget widget : scrollableWidgets) {
             widget.visible = (widget.getY() + widget.getHeight() > 40 && widget.getY() < height - 70);
@@ -168,6 +204,23 @@ public class AutoWalkScreen extends Screen {
         addDrawableChild(btn);
     }
 
+    private void addCycleButton(int x, int y, int w, String label, String[] options, String current, Consumer<String> action, String desc) {
+        int[] idx = { 0 };
+        for (int i = 0; i < options.length; i++) {
+            if (options[i].equals(current)) { idx[0] = i; break; }
+        }
+        ButtonWidget btn = ButtonWidget.builder(
+                getCycleText(label, options[idx[0]]),
+                b -> {
+                    idx[0] = (idx[0] + 1) % options.length;
+                    action.accept(options[idx[0]]);
+                    b.setMessage(getCycleText(label, options[idx[0]]));
+                }
+        ).dimensions(x, y, w, 20).tooltip(Tooltip.of(Text.literal("§b" + desc))).build();
+        scrollableWidgets.add(btn);
+        addDrawableChild(btn);
+    }
+
     private void addSlider(int x, int y, int w, String label, float cur, float min, float max, Consumer<Float> action) {
         GenericSlider slider = new GenericSlider(x, y, w, 20, label, cur, min, max, action);
         scrollableWidgets.add(slider);
@@ -186,11 +239,23 @@ public class AutoWalkScreen extends Screen {
                         : Text.literal("OFF").formatted(Formatting.RED));
     }
 
+    private Text getCycleText(String label, String value) {
+        return Text.literal(label + ": ").append(
+                Text.literal(value).formatted(Formatting.AQUA));
+    }
+
     private Text getGlobalToggleText() {
         return Text.literal("AutoWalk: ").append(
                 AutoWalkConfig.getInstance().enabled
                         ? Text.literal("Enabled").formatted(Formatting.GREEN)
                         : Text.literal("Disabled").formatted(Formatting.RED));
+    }
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
+        scrollOffset = Math.max(0, Math.min(maxScroll, scrollOffset - (int) (verticalAmount * 10)));
+        init();
+        return true;
     }
 
     @Override
@@ -216,7 +281,7 @@ public class AutoWalkScreen extends Screen {
         @Override
         protected void updateMessage() {
             float val = min + (float) (this.value * (max - min));
-            this.setMessage(Text.literal(label + ": §b" + String.format("%.0f", val)));
+            this.setMessage(Text.literal(label + ": §b" + String.format("%.1f", val)));
         }
 
         @Override
