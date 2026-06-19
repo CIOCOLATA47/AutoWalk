@@ -270,7 +270,7 @@ public class AutoWalkScreen extends Screen {
     @Override
     public void onClose() {
         AutoWalkConfig.getInstance().save();
-        if (minecraft != null) minecraft.setScreen(parent);
+        if (minecraft != null) minecraft.setScreenAndShow(parent);
     }
     
     private static class GenericSlider extends AbstractSliderButton {

@@ -1,35 +1,28 @@
 {
   "schemaVersion": 1,
-  "id": "antiafk",
+  "id": "autowalk",
   "version": "${version}",
-  "name": "AntiAfk",
-  "description": "A mod that prevents players from going AFK.",
+  "name": "Autowalk",
+  "description": "A mod that makes you walk forward.",
   "authors": [
     "Ciocolata47"
   ],
   "contact": {
-    "homepage": "https://modrinth.com/mod/antiafk",
-    "sources": "https://github.com/CIOCOLATA47/AntiAfk",
-    "issues": "https://github.com/CIOCOLATA47/AntiAfk/issues"
+    "repo": "https://github.com/CIOCOLATA47/AutoWalk",
+    "issues": "https://github.com/CIOCOLATA47/AutoWalk/issues"
   },
-  "license": "MIT",
+  "license": "All-Rights-Reserved",
   "icon": "icon.png",
+  "mixins": [
+    "autowalk.mixins.json"
+  ],
   "environment": "client",
   "entrypoints": {
+
     "main": [
-      "me.cioco.antiafk.Main"
+      "me.cioco.autowalk.Main"
     ]
   },
-  "custom": {
-    "modmenu": {
-      "links": {
-        "modmenu.kofi": "https://ko-fi.com/ciocolata47"
-      }
-    }
-  },
-  "mixins": [
-    "antiafk.mixins.json"
-  ],
   "depends": {
     "fabricloader": ">=${loader_version}",
     "minecraft": ">=${minecraft_version}"

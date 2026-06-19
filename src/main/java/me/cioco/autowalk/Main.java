@@ -52,7 +52,7 @@ public class Main implements ModInitializer {
             }
 
             while (guiKey.consumeClick()) {
-                client.setScreen(new AutoWalkScreen(client.screen));
+                client.setScreenAndShow(new AutoWalkScreen(client.gui.screen()));
             }
         });
     }

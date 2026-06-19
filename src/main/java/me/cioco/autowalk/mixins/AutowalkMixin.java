@@ -48,6 +48,7 @@ public class AutowalkMixin {
     @Unique private boolean autowalkSavedBack      = false;
     @Unique private boolean autowalkSavedLeft      = false;
     @Unique private boolean autowalkSavedRight     = false;
+    @Unique private int autowalkEatDelay = 0;
 
     @Inject(method = "tick", at = @At("HEAD"))
     private void onTick(CallbackInfo ci) {
@@ -79,7 +80,15 @@ public class AutowalkMixin {
             } else if (player.getFoodData().getFoodLevel() <= config.eatHungerThreshold) {
                 int foodSlot = autowalkFindFoodSlot(player);
                 if (foodSlot != -1) {
-                    autowalkStartEating(mc, foodSlot);
+                    if (player.getInventory().getSelectedSlot() != foodSlot) {
+                        player.getInventory().setSelectedSlot(foodSlot);
+                        autowalkEatDelay = 2;
+                    }
+                    if (autowalkEatDelay <= 0) {
+                        autowalkStartEating(mc, foodSlot);
+                    } else {
+                        autowalkEatDelay--;
+                    }
                 }
             }
         }
@@ -101,32 +110,43 @@ public class AutowalkMixin {
             }
         }
 
-        if (autowalkEvasionPhase == 1) {
-            config.moveForward = false;
-            config.moveBack    = true;
-            config.moveLeft    = false;
-            config.moveRight   = false;
-            if (--autowalkEvasionTicker <= 0) {
-                autowalkEvasionPhase  = 2;
-                autowalkEvasionTicker = 30;
+        if (autowalkEvasionPhase > 0) {
+            if (autowalkEvasionPhase == 1) {
+                config.moveForward = false;
+                config.moveBack = true;
+                config.moveLeft = false;
+                config.moveRight = false;
+                if (--autowalkEvasionTicker <= 0) {
+                    autowalkEvasionPhase = 2;
+                    autowalkEvasionTicker = 30;
+                }
+            } else if (autowalkEvasionPhase == 2) {
+                config.moveForward = false;
+                config.moveBack = false;
+                config.moveLeft = autowalkEvasionLeft;
+                config.moveRight = !autowalkEvasionLeft;
+                if (--autowalkEvasionTicker <= 0) {
+                    autowalkEvasionPhase = 0;
+                    config.moveForward = autowalkSavedForward;
+                    config.moveBack = autowalkSavedBack;
+                    config.moveLeft = autowalkSavedLeft;
+                    config.moveRight = autowalkSavedRight;
+                }
             }
-        } else if (autowalkEvasionPhase == 2) {
-            config.moveForward = false;
-            config.moveBack    = false;
-            config.moveLeft    = autowalkEvasionLeft;
-            config.moveRight   = !autowalkEvasionLeft;
-            if (--autowalkEvasionTicker <= 0) {
-                autowalkEvasionPhase = 0;
-                config.moveForward   = autowalkSavedForward;
-                config.moveBack      = autowalkSavedBack;
-                config.moveLeft      = autowalkSavedLeft;
-                config.moveRight     = autowalkSavedRight;
+        }
+
+        else {
+            autowalkApplyMovementMode(mc, player, config);
+            if (config.avoidHostileMobs && autowalkNearbyHostile(player, config.hostileAvoidDistance)) {
+                autowalkStartEvasion(config);
+            } else if (config.avoidPlayers && autowalkNearbyPlayer(player, config.playerAvoidDistance)) {
+                autowalkStartEvasion(config);
             }
         }
 
         autowalkApplyMovementMode(mc, player, config);
 
-        boolean isGUIOpen = mc.screen != null;
+        boolean isGUIOpen = mc.gui.screen() != null;
         if (isGUIOpen) {
             if (config.moveForward)  { mc.options.keyUp.setDown(true);    autowalkPressedForward = true; }
             if (config.moveBack)     { mc.options.keyDown.setDown(true);  autowalkPressedBack    = true; }
@@ -272,25 +292,23 @@ public class AutowalkMixin {
         boolean moving = config.moveForward || config.moveBack || config.moveLeft || config.moveRight;
         if (!moving) return;
 
-        Level  level   = player.level();
-        double px      = player.getX();
-        double py      = player.getY();
-        double pz      = player.getZ();
-        float  yaw     = player.getYRot();
-        double radY    = Math.toRadians(yaw);
-        double dx      = -Math.sin(radY);
-        double dz      =  Math.cos(radY);
-        int    checkX  = (int) Math.floor(px + dx * 1.1);
-        int    checkZ  = (int) Math.floor(pz + dz * 1.1);
-        int    playerY = (int) Math.floor(py);
+        Level level = player.level();
+        float yaw = player.getYRot();
+        double radY = Math.toRadians(yaw);
+        double dx = -Math.sin(radY);
+        double dz = Math.cos(radY);
+
+        double lookAhead = player.isSprinting() ? 2.2 : 1.6;
+        int checkX = (int) Math.floor(player.getX() + dx * lookAhead);
+        int checkZ = (int) Math.floor(player.getZ() + dz * lookAhead);
+        int playerY = (int) Math.floor(player.getY());
 
         if (config.avoidLava) {
             for (int dy = -1; dy <= 0; dy++) {
                 BlockPos bp = new BlockPos(checkX, playerY + dy, checkZ);
-                var block   = level.getBlockState(bp).getBlock();
-                var fluid   = level.getFluidState(bp);
-                if (block == Blocks.LAVA || block == Blocks.MAGMA_BLOCK
-                        || fluid.is(Fluids.LAVA) || fluid.is(Fluids.FLOWING_LAVA)) {
+                var state = level.getBlockState(bp);
+                var fluid = level.getFluidState(bp);
+                if (state.is(Blocks.LAVA) || state.is(Blocks.MAGMA_BLOCK) || fluid.is(Fluids.LAVA)) {
                     if (autowalkHandleHazard(mc, player, config, "lava")) return;
                     break;
                 }
@@ -299,7 +317,7 @@ public class AutowalkMixin {
 
         if (config.avoidFire) {
             BlockPos bp = new BlockPos(checkX, playerY, checkZ);
-            var block   = level.getBlockState(bp).getBlock();
+            var block = level.getBlockState(bp).getBlock();
             if (block == Blocks.FIRE || block == Blocks.SOUL_FIRE) {
                 if (autowalkHandleHazard(mc, player, config, "fire")) return;
             }
@@ -308,7 +326,7 @@ public class AutowalkMixin {
         if (config.avoidCactus) {
             for (int dy = 0; dy <= 1; dy++) {
                 BlockPos bp = new BlockPos(checkX, playerY + dy, checkZ);
-                if (level.getBlockState(bp).getBlock() == Blocks.CACTUS) {
+                if (level.getBlockState(bp).is(Blocks.CACTUS)) {
                     if (autowalkHandleHazard(mc, player, config, "cactus")) return;
                     break;
                 }
@@ -318,7 +336,7 @@ public class AutowalkMixin {
         if (config.avoidBerryBush) {
             for (int dy = 0; dy <= 1; dy++) {
                 BlockPos bp = new BlockPos(checkX, playerY + dy, checkZ);
-                if (level.getBlockState(bp).getBlock() == Blocks.SWEET_BERRY_BUSH) {
+                if (level.getBlockState(bp).is(Blocks.SWEET_BERRY_BUSH)) {
                     if (autowalkHandleHazard(mc, player, config, "berry bush")) return;
                     break;
                 }
@@ -326,33 +344,31 @@ public class AutowalkMixin {
         }
 
         if (config.avoidDrops) {
-            boolean groundUnder = level.getBlockState(new BlockPos(checkX, playerY - 1, checkZ)).isSolid();
-            if (!groundUnder) {
+            BlockPos aheadFloor = new BlockPos(checkX, playerY - 1, checkZ);
+            if (!level.getBlockState(aheadFloor).isSolid()) {
                 int dropDepth = 0;
-                for (int dy = 1; dy <= config.jumpDropThreshold + 1; dy++) {
-                    if (level.getBlockState(new BlockPos(checkX, playerY - dy, checkZ)).isSolid()) break;
+                for (int dy = 1; dy <= config.jumpDropThreshold + 2; dy++) {
+                    if (level.getBlockState(aheadFloor.below(dy)).isSolid()) break;
                     dropDepth++;
                 }
                 if (dropDepth > config.jumpDropThreshold) {
-                    autowalkHandleDisable(mc, config, "AutoWalk: Stopped — big drop detected ahead!");
+                    autowalkHandleDisable(mc, config, "AutoWalk: Stopped — big drop detected!");
                     return;
                 }
             }
         }
 
-        BlockPos feetAhead  = new BlockPos(checkX, playerY,     checkZ);
+        BlockPos feetAhead = new BlockPos(checkX, playerY, checkZ);
         BlockPos chestAhead = new BlockPos(checkX, playerY + 1, checkZ);
-        BlockPos headAhead  = new BlockPos(checkX, playerY + 2, checkZ);
+        BlockPos headAhead = new BlockPos(checkX, playerY + 2, checkZ);
 
-        boolean obstacle   = level.getBlockState(feetAhead).isSolid()
-                || level.getBlockState(chestAhead).isSolid();
+        boolean obstacle = level.getBlockState(feetAhead).isSolid() || level.getBlockState(chestAhead).isSolid();
         boolean clearAbove = !level.getBlockState(headAhead).isSolid();
 
         if (obstacle && clearAbove && player.onGround()) {
             autowalkDoJump(mc);
         }
     }
-
     @Unique
     private void autowalkHandleWaterSurface(Minecraft mc, Player player) {
         if (!player.isInWater()) return;
