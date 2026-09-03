@@ -47,6 +47,11 @@ public class AutoWalkConfig {
     public boolean avoidPlayers          = false;
     public float   playerAvoidDistance   = 4.0f;
 
+    public boolean showHud = true;
+    public boolean showDetailedHud = true;
+    public int hudX = 5;
+    public int hudY = 25;
+    public HudPosition hudPosition = HudPosition.TOP_LEFT;
 
     public enum DamageResponse {
         STOP,
@@ -62,6 +67,13 @@ public class AutoWalkConfig {
         MANUAL,
         RANDOM,
         CIRCLE
+    }
+
+    public enum HudPosition {
+        TOP_LEFT,
+        TOP_RIGHT,
+        BOTTOM_LEFT,
+        BOTTOM_RIGHT
     }
 
     public MovementMode movementMode = MovementMode.MANUAL;
@@ -95,6 +107,12 @@ public class AutoWalkConfig {
 
         props.setProperty("autoEat", String.valueOf(autoEat));
         props.setProperty("eatHungerThreshold", String.valueOf(eatHungerThreshold));
+
+        props.setProperty("showHud", String.valueOf(showHud));
+        props.setProperty("showDetailedHud", String.valueOf(showDetailedHud));
+        props.setProperty("hudX", String.valueOf(hudX));
+        props.setProperty("hudY", String.valueOf(hudY));
+        props.setProperty("hudPosition", hudPosition.name());
 
 
         props.setProperty("autoJump", String.valueOf(autoJump));
@@ -145,6 +163,12 @@ public class AutoWalkConfig {
             this.moveBack     = getBool(props, "moveBack", false);
             this.moveLeft     = getBool(props, "moveLeft", false);
             this.moveRight    = getBool(props, "moveRight", false);
+
+            this.showHud = getBool(props, "showHud", true);
+            this.showDetailedHud = getBool(props, "showDetailedHud", true);
+            this.hudX = getInt(props, "hudX", 5);
+            this.hudY = getInt(props, "hudY", 25);
+            this.hudPosition = getEnum(props, "hudPosition", HudPosition.class, HudPosition.TOP_LEFT);
 
             this.autoEat            = getBool(props, "autoEat", false);
             this.eatHungerThreshold = getFloat(props, "eatHungerThreshold", 10.0f);

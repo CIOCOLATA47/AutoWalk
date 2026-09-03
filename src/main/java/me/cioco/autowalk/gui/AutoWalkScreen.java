@@ -30,8 +30,8 @@ public class AutoWalkScreen extends Screen {
     private Button doneButton;
     private Button globalToggleButton;
 
-    private final int[] sectionY    = new int[9];
-    private final int[] sectionRows = new int[9];
+    private final int[] sectionY    = new int[10];
+    private final int[] sectionRows = new int[10];
 
     public AutoWalkScreen(Screen parent) {
         super(Component.literal("Auto-Walk Configuration"));
@@ -93,7 +93,7 @@ public class AutoWalkScreen extends Screen {
 
         sectionY[6] = y; sectionRows[6] = 2;
         addToggleButton(leftCol,  y, "Avoid Lava",       "Stops if lava is ahead",       config.avoidLava,      v -> config.avoidLava      = v);
-        addToggleButton(rightCol, y, "Avoid Fire",        "Stops if fire is ahead",       config.avoidFire,      v -> config.avoidFire      = v);
+        addToggleButton(rightCol, y, "Avoid Fire",       "Stops if fire is ahead",       config.avoidFire,      v -> config.avoidFire      = v);
         y += SPACING_Y;
         addToggleButton(leftCol,  y, "Avoid Cactus",     "Stops if cactus is ahead",     config.avoidCactus,    v -> config.avoidCactus    = v);
         addToggleButton(rightCol, y, "Avoid Berry Bush", "Stops if berry bush is ahead", config.avoidBerryBush, v -> config.avoidBerryBush = v);
@@ -105,6 +105,23 @@ public class AutoWalkScreen extends Screen {
         y += SPACING_Y;
         addToggleButton(leftCol,  y, "Avoid Players", "Stops near other players", config.avoidPlayers, v -> config.avoidPlayers = v);
         addSlider(rightCol, y, 150, "Player Distance", config.playerAvoidDistance, 1.0f, 20.0f, v -> config.playerAvoidDistance = v);
+        y += SPACING_Y + SECTION_MARGIN;
+
+        sectionY[8] = y; sectionRows[8] = 3;
+        addToggleButton(leftCol,  y, "Show HUD", "Display AutoWalk status on screen", config.showHud, v -> config.showHud = v);
+        addToggleButton(rightCol, y, "Detailed HUD", "Show more info in HUD", config.showDetailedHud, v -> config.showDetailedHud = v);
+        y += SPACING_Y;
+        addIntSlider(leftCol, y, 150, "HUD X", config.hudX, 0, 100, v -> config.hudX = v);
+        addIntSlider(rightCol, y, 150, "HUD Y", config.hudY, 0, 100, v -> config.hudY = v);
+        y += SPACING_Y;
+        addCycleButton(leftCol, y, 310, "HUD Position",
+                new String[]{"TOP_LEFT", "TOP_RIGHT", "BOTTOM_LEFT", "BOTTOM_RIGHT"},
+                config.hudPosition.name(),
+                v -> {
+                    config.hudPosition = AutoWalkConfig.HudPosition.valueOf(v);
+                    updateHudPosition(config);
+                },
+                "Where to display the HUD on screen");
         y += SPACING_Y + SECTION_MARGIN;
 
         contentHeight = y + 40;
@@ -150,7 +167,8 @@ public class AutoWalkScreen extends Screen {
                 "Auto Eat",
                 "Auto Jump & Drops",
                 "Hazard Avoidance",
-                "Entity Avoidance"
+                "Entity Avoidance",
+                "HUD Settings"
         };
 
         for (int i = 0; i < sectionY.length - 1; i++) {
@@ -249,6 +267,27 @@ public class AutoWalkScreen extends Screen {
         addRenderableWidget(slider);
     }
 
+    private void updateHudPosition(AutoWalkConfig config) {
+        switch (config.hudPosition) {
+            case TOP_LEFT:
+                config.hudX = 5;
+                config.hudY = 25;
+                break;
+            case TOP_RIGHT:
+                config.hudX = 5;
+                config.hudY = 25;
+                break;
+            case BOTTOM_LEFT:
+                config.hudX = 5;
+                config.hudY = 75;
+                break;
+            case BOTTOM_RIGHT:
+                config.hudX = 5;
+                config.hudY = 75;
+                break;
+        }
+    }
+
     private Component getToggleText(String label, boolean value) {
         return Component.literal(label + ": ").append(
                 value ? Component.literal("ON").withStyle(ChatFormatting.GREEN)
@@ -272,7 +311,7 @@ public class AutoWalkScreen extends Screen {
         AutoWalkConfig.getInstance().save();
         if (minecraft != null) minecraft.setScreenAndShow(parent);
     }
-    
+
     private static class GenericSlider extends AbstractSliderButton {
         private final String label;
         private final float min, max;
